@@ -14,7 +14,7 @@ st.title("Fundamentele Analyse: Aandelen")
 
 st.write("Vul de gegevens in over een aandeel om de financiële ratio's te berekenen. Onder een ratio komt automatisch een groene (goed), oranje (matig) of rode (slecht) tekst te staan. Dit geeft aan hoe het aandeel scoort op dit onderdeel van de fundamentele analyse.")
 
-st.warning("In de Giro staan getallen niet in 1 format, soms een , en soms een punt. Dit zorgt voor inconsistenties als je de getallen invult. Daarom moet je:")
+st.warning("In de Giro staan getallen niet in 1 format: 3,809B (dit is 3 809 000 000 000), 18.9 (18 900 000). Dit zorgt voor inconsistenties als je de getallen invult. Daarom moet je:")
 
 st.text_input("Enter the name of the stock", key="stock_name", placeholder="Aandeel Naam")
 # ----------------TODO: Search google news for articles related to the stock ----------
