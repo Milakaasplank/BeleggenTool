@@ -75,7 +75,7 @@ try:
         col2.markdown("<span style='color: green;'>Rentabiliteit boven staatsobligaties + 10%</span>", unsafe_allow_html=True)
     col3.metric("Graham Number", f"{graham_waarde:.2f}", "", border=True)
     # Show information about Graham Number
-    col3.caption("Maximale prijs voor een aandeel")
+    col3.caption("Maximale prijs wat je zou moeten neerleggen voor een aandeel")
     col1, col2, col3 = st.columns(3)
     col1.metric("Winst per Aandeel", f"{wpa_waarde:.2f} €", "", border=True)
     col1.caption("Hoeveel winst een bedrijf maakt per uitstaand aandeel.")
