@@ -13,6 +13,7 @@ Open de folder waar het project is opgeslagen, en navigeer vervolgens naar de �
 
 TIP: Maak een snelkoppeling aan op je bureaublad voor de “tool_opstarten” applicatie!
 
+# Voor Mila
 ## Setup van het lokale dashboard runnen
 1. Maak een virtual environment aan: python -m venv .venv
 2. Activeer de venv: .venv\Scripts\activate
