@@ -15,10 +15,12 @@ import openpyxl
 
 # Title
 st.title("Fundamentele Analyse: Aandeel")
-st.subheader("Welkom bij de Fundamentele Analyse App Vince!")
-st.image("image.png")
-st.text("Gebruik deze app om financiële ratio's van aandelen te berekenen. Je kan de data gebruiken om betere investeringsbeslissingen te nemen.")
-st.text("Er is een Aandelen pagina waar je informatie kan invullen over een aandeel. Deze informatie vind je op De Giro pagina bij elk aandeel.")
+st.subheader("Welkom Vince!")
+st.image("image.png", use_column_width=True)
+st.subheader("Hoe werkt het?")
+st.text("Gebruik deze app om gegevens in te vullen van een aandeel. Daarna zullen automatisch financiële ratio's van het aandeel worden berekend. Onder elke ratio staat een richtlijn die uit het boek Beleggen voor Dummies komt. Je kan dit 'advies' gebruiken om betere investeringsbeslissingen te nemen.")
+st.text("Er is een Aandelen pagina waar je de benodigde informatie kan invullen over een aandeel. Deze informatie vind je op De Giro pagina bij elk aandeel.")
+
 # Itemize the coming updates
 st.text("Komende updates:")
 st.text("- Laatste nieuwsberichten van een aandeel")
