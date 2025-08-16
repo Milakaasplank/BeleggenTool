@@ -6,7 +6,7 @@ from pygooglenews import GoogleNews
 from openai import OpenAI
 import os
 
-client = OpenAI(api_key=os.environ["OPENAI"])
+client = OpenAI(api_key="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")
 
 st.set_page_config(page_title="Aandelen", page_icon="📈")
 
