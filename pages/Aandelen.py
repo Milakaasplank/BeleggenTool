@@ -4,8 +4,9 @@ import pandas as pd
 from GoogleNews import GoogleNews
 from pygooglenews import GoogleNews
 from openai import OpenAI
+import os
 
-client = OpenAI()
+client = OpenAI(api_key=os.environ["OPENAI"])
 
 st.set_page_config(page_title="Aandelen", page_icon="📈")
 
