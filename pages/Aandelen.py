@@ -5,7 +5,8 @@ from GoogleNews import GoogleNews
 from pygooglenews import GoogleNews
 from openai import OpenAI
 import os
-client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
+
+# client = OpenAI(api_key=os.getenv("OPENAI_KEY"))
 
 st.set_page_config(page_title="Aandelen", page_icon="📈")
 
@@ -25,15 +26,15 @@ st.text_input("Enter the name of the stock", key="stock_name", placeholder="Aand
 #         st.markdown(f"[{row['title']}]({row['link']}) - {row['published']}")
 
 # Ask openai for a short summary on what they do
-if "stock_name" in st.session_state:
-    response = client.chat.completions.create(
-        model="gpt-4",
-        messages=[
-            {"role": "user", "content": f"Geef een korte samenvatting van wat {st.session_state['stock_name']} doet."}
-        ]
-    )
-    st.subheader("Bedrijfsinformatie")
-    st.write(response.choices[0].message.content)
+# if "stock_name" in st.session_state:
+#     response = client.chat.completions.create(
+#         model="gpt-4",
+#         messages=[
+#             {"role": "user", "content": f"Geef een korte samenvatting van wat {st.session_state['stock_name']} doet."}
+#         ]
+#     )
+#     st.subheader("Bedrijfsinformatie")
+#     st.write(response.choices[0].message.content)
 
 # Layout for input
 col1, col2, col3 = st.columns(3)
