@@ -3,7 +3,9 @@ from calculations import *
 import pandas as pd
 from GoogleNews import GoogleNews
 from pygooglenews import GoogleNews
-import openai
+from openai import OpenAI
+
+client = OpenAI()
 
 st.set_page_config(page_title="Aandelen", page_icon="📈")
 
@@ -24,7 +26,7 @@ st.text_input("Enter the name of the stock", key="stock_name", placeholder="Aand
 
 # Ask openai for a short summary on what they do
 if "stock_name" in st.session_state:
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-4",
         messages=[
             {"role": "user", "content": f"Geef een korte samenvatting van wat {st.session_state['stock_name']} doet."}
