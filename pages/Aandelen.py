@@ -10,6 +10,10 @@ import os
 
 st.set_page_config(page_title="Aandelen", page_icon="📈")
 
+st.write("Vul de gegevens in over een aandeel om de financiële ratio's te berekenen. Onder een ratio komt automatisch een groene (goed), oranje (matig) of rode (slecht) tekst te staan. Dit geeft aan hoe het aandeel scoort op dit onderdeel van de fundamentele analyse.")
+
+st.warning("In de Giro staan getallen niet in 1 format, soms een , en soms een punt. Dit zorgt voor inconsistenties als je de getallen invult. Daarom moet je:")
+
 st.title("Fundamentele Analyse: Aandelen")
 st.text_input("Enter the name of the stock", key="stock_name", placeholder="Aandeel Naam")
 # ----------------TODO: Search google news for articles related to the stock ----------
