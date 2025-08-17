@@ -14,7 +14,7 @@ st.title("Fundamentele Analyse: Aandelen")
 
 st.write("Vul de gegevens in over een aandeel om de financiële ratio's te berekenen. Onder een ratio komt automatisch een groene (goed), oranje (matig) of rode (slecht) tekst te staan. Dit geeft aan hoe het aandeel scoort op dit onderdeel van de fundamentele analyse.")
 
-st.warning("In de Giro staan biljoenen gemixt met miljoenen (3,809B (dit is 3 809 000 000 000), 18.9 (18 900 000). Dit zorgt voor inconsistenties als je de getallen invult.")
+st.warning("In de Giro staan biljoenen gemixt met miljoenen (3,809B (dit is 3 809 000 000 000), 18.9 (18 900 000). Dit zorgt voor inconsistenties als je de getallen invult. Lees daarom goed hoe je de getallen moet invullen.")
 
 st.text_input("Enter the name of the stock", key="stock_name", placeholder="Aandeel Naam")
 # ----------------TODO: Search google news for articles related to the stock ----------
@@ -54,6 +54,7 @@ with col1:
 
 with col2:
     st.subheader("Resultatenrekening")
+    st.badge(". in DeGiro is eigenlijk een duizendtal! Negeer de punt! In miljoenen!", icon=":material/check:", color="orange")
     nettowinst = st.number_input("Netincome (€)", step=1000.0, key="nettowinst")
     tienjaars_staatsobligatie = st.number_input("10-Year Government Bond Yield (%)", step=0.01, key="tienjaars_staatsobligatie")
 
@@ -62,7 +63,8 @@ col3, col4 = st.columns(2)
 
 with col3:
     st.subheader("Prijsdata")
-    uitstaande_aandelen = st.number_input("Outstanding Shares (Miljoenen)", step=1.0, key="uitstaande_aandelen")
+    st.badge("Outstanding shares in miljoenen", icon=":orange-badge", color="orange")
+    uitstaande_aandelen = st.number_input("Outstanding Shares (#)", step=1.0, key="uitstaande_aandelen")
     actuele_beurskoers = st.number_input("Current Stock Price (€)", step=0.01, key="actuele_beurskoers")
 
 with col4:    
