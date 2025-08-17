@@ -46,13 +46,14 @@ st.subheader("Financiële Gegevens")
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subsubheader("Balans")
+    st.subheader("Balans")
+    st.badge("Kopieer het exacte getal", icon=":material/check:", color="green")
     activa = st.number_input("Total Assets (€)", step=1000.0, key="activa")
     passiva = st.number_input("Total Liabilities (€)", step=1000.0, key="passiva")
     boekwaarde_per_aandeel = st.number_input("Boekwaarde per aandeel (€)", step=0.01, key="boekwaarde_per_aandeel")
 
 with col2:
-    st.subsubheader("Resultatenrekening")
+    st.subheader("Resultatenrekening")
     nettowinst = st.number_input("Netincome (€)", step=1000.0, key="nettowinst")
     tienjaars_staatsobligatie = st.number_input("10-Year Government Bond Yield (%)", step=0.01, key="tienjaars_staatsobligatie")
 
@@ -60,12 +61,12 @@ st.subheader("Overzicht")
 col3, col4 = st.columns(2)
 
 with col3:
-    st.subsubheader("Prijsdata")
+    st.subheader("Prijsdata")
     uitstaande_aandelen = st.number_input("Outstanding Shares (Miljoenen)", step=1.0, key="uitstaande_aandelen")
     actuele_beurskoers = st.number_input("Current Stock Price (€)", step=0.01, key="actuele_beurskoers")
 
 with col4:    
-    st.subsubheader("Ratio's")
+    st.subheader("Ratio's")
     verwachte_winst = st.number_input("Verwachte winst (€)", step=1000.0, key="verwachte_winst")
 
 # Calculations
