@@ -69,6 +69,7 @@ with col3:
 
 with col4:    
     st.subheader("Ratio's")
+    st.badge("Verwachte winst in miljoenen", icon=":material/check:", color="orange")
     verwachte_winst = st.number_input("Verwachte winst (€)", step=1000.0, key="verwachte_winst")
 
 # Calculations
