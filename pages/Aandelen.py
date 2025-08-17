@@ -64,12 +64,14 @@ col3, col4 = st.columns(2)
 with col3:
     st.subheader("Prijsdata")
     st.badge("Outstanding shares in miljoenen", icon=":material/check:", color="orange")
+    st.badge("Een biljoen is gelijk aan duizend miljoen", icon=":material/check:", color="blue")
     uitstaande_aandelen = st.number_input("Outstanding Shares (#)", step=1.0, key="uitstaande_aandelen")
     actuele_beurskoers = st.number_input("Current Stock Price (€)", step=0.01, key="actuele_beurskoers")
 
 with col4:    
     st.subheader("Ratio's")
     st.badge("Verwachte winst in miljoenen", icon=":material/check:", color="orange")
+    st.badge("Een biljoen is gelijk aan duizend miljoen", icon=":material/check:", color="blue")
     verwachte_winst = st.number_input("Verwachte winst (€)", step=1000.0, key="verwachte_winst")
 
 # Calculations
