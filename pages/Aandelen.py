@@ -15,6 +15,7 @@ st.title("Fundamentele Analyse: Aandelen")
 st.write("Vul de gegevens in over een aandeel om de financiële ratio's te berekenen. Onder een ratio komt automatisch een groene (goed), oranje (matig) of rode (slecht) tekst te staan. Dit geeft aan hoe het aandeel scoort op dit onderdeel van de fundamentele analyse.")
 
 st.warning("In de Giro staan getallen niet in 1 format: 3,809B (dit is 3 809 000 000 000), 18.9 (18 900 000). Dit zorgt voor inconsistenties als je de getallen invult. Daarom moet je:")
+st.warning("- Activa en Passiva in het zelfde format staan, dus allebei miljoen of allebei biljoen.")
 
 st.text_input("Enter the name of the stock", key="stock_name", placeholder="Aandeel Naam")
 # ----------------TODO: Search google news for articles related to the stock ----------
@@ -42,24 +43,26 @@ st.text_input("Enter the name of the stock", key="stock_name", placeholder="Aand
 #     st.write(response.choices[0].message.content)
 
 # Layout for input
-col1, col2, col3 = st.columns(3)
-
+col1, col2 = st.columns(2)
+st.subheader("Financiële Gegevens")
 with col1:
-    st.subheader("Financiële Gegevens > Balans")
+    st.subheader("Balans")
     activa = st.number_input("Total Assets (€)", step=1000.0, key="activa")
     passiva = st.number_input("Total Liabilities (€)", step=1000.0, key="passiva")
     boekwaarde_per_aandeel = st.number_input("Boekwaarde per aandeel (€)", step=0.01, key="boekwaarde_per_aandeel")
 
 with col2:
-    st.subheader("Financiële Gegevens > Resultatenrekening")
+    st.subheader("Resultatenrekening")
     nettowinst = st.number_input("Netincome (€)", step=1000.0, key="nettowinst")
     tienjaars_staatsobligatie = st.number_input("10-Year Government Bond Yield (%)", step=0.01, key="tienjaars_staatsobligatie")
 
+col3, col4 = st.columns(2)
+st.subheader("Overzicht")
 with col3:
-    st.subheader("Overzicht > Prijsdata")
+    st.subheader("Prijsdata")
     uitstaande_aandelen = st.number_input("Outstanding Shares (Miljoenen)", step=1.0, key="uitstaande_aandelen")
     actuele_beurskoers = st.number_input("Current Stock Price (€)", step=0.01, key="actuele_beurskoers")
-    st.subheader("Overzicht > Ratio's")
+    st.subheader("Ratio's")
     verwachte_winst = st.number_input("Verwachte winst (€)", step=1000.0, key="verwachte_winst")
 
 # Calculations
