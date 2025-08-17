@@ -63,7 +63,7 @@ col3, col4 = st.columns(2)
 
 with col3:
     st.subheader("Prijsdata")
-    st.badge("Outstanding shares in miljoenen", icon=":orange-badge", color="orange")
+    st.badge("Outstanding shares in miljoenen", icon=":material/check:", color="orange")
     uitstaande_aandelen = st.number_input("Outstanding Shares (#)", step=1.0, key="uitstaande_aandelen")
     actuele_beurskoers = st.number_input("Current Stock Price (€)", step=0.01, key="actuele_beurskoers")
 
