@@ -14,7 +14,21 @@ st.title("Fundamentele Analyse: Aandelen")
 
 st.write("Vul de gegevens in over een aandeel om de financiële ratio's te berekenen. Onder een ratio komt automatisch een groene (goed), oranje (matig) of rode (slecht) tekst te staan. Dit geeft aan hoe het aandeel scoort op dit onderdeel van de fundamentele analyse.")
 
-st.warning("In de Giro staan biljoenen gemixt met miljoenen (3,809B (dit is 3 809 000 000 000), 18.9 (18 900 000). Dit zorgt voor inconsistenties als je de getallen invult. Lees daarom goed hoe je de getallen moet invullen.")
+st.warning(
+    "⚠️ **Let op de DeGiro-conventie — die wijkt af van wat je verwacht:**\n\n"
+    "- DeGiro **`M`** = **miljard** (10⁹) — dus NIET miljoen!\n"
+    "- DeGiro **`B`** = **biljoen** (10¹²)\n"
+    "- Geen suffix in DeGiro = meestal al in miljoenen\n\n"
+    "**Deze app verwacht alle totaalwaardes in miljoenen.** Reken dus om:\n\n"
+    "| DeGiro toont | Werkelijk bedrag | Vul in app in |\n"
+    "|---|---|---|\n"
+    "| `37,6M` | €37,6 miljard | **`37600`** |\n"
+    "| `3,8B` | €3,8 biljoen | **`3800000`** |\n"
+    "| `651` (geen suffix) | €651 miljoen | **`651`** |\n"
+    "| `5,593M` aandelen | 5,593 mrd aandelen | **`5593`** |\n\n"
+    "🔍 Onder elk veld verschijnt de geïnterpreteerde waarde — controleer altijd of de magnitude klopt.\n\n"
+    "Per-aandeel waardes (koers) en percentages vul je gewoon zoals DeGiro ze toont."
+)
 
 st.text_input("Enter the name of the stock", key="stock_name", placeholder="Aandeel Naam")
 # ----------------TODO: Search google news for articles related to the stock ----------
@@ -47,15 +61,16 @@ col1, col2 = st.columns(2)
 
 with col1:
     st.subheader("Balans")
-    st.badge("Kopieer het exacte getal", icon=":material/check:", color="green")
-    activa = st.number_input("Total Assets (€)", step=1000.0, key="activa")
-    passiva = st.number_input("Total Liabilities (€)", step=1000.0, key="passiva")
-    boekwaarde_per_aandeel = st.number_input("Boekwaarde per aandeel (€)", step=0.01, key="boekwaarde_per_aandeel")
+    activa = st.number_input("Total Assets (in M €)", step=1.0, key="activa")
+    st.caption(preview_geld_M(activa))
+    passiva = st.number_input("Total Liabilities (in M €)", step=1.0, key="passiva")
+    st.caption(preview_geld_M(passiva))
+    st.caption("ℹ️ Boekwaarde per aandeel wordt automatisch berekend uit eigen vermogen ÷ aantal aandelen.")
 
 with col2:
     st.subheader("Resultatenrekening")
-    st.badge(". in DeGiro is eigenlijk een duizendtal! Negeer de punt! In miljoenen!", icon=":material/check:", color="orange")
-    nettowinst = st.number_input("Netincome (€)", step=1000.0, key="nettowinst")
+    nettowinst = st.number_input("Netincome (in M €)", step=1.0, key="nettowinst")
+    st.caption(preview_geld_M(nettowinst))
     tienjaars_staatsobligatie = st.number_input("10-Year Government Bond Yield (%)", step=0.01, key="tienjaars_staatsobligatie")
 
 st.subheader("Overzicht")
@@ -63,16 +78,14 @@ col3, col4 = st.columns(2)
 
 with col3:
     st.subheader("Prijsdata")
-    st.badge("Outstanding shares in miljoenen", icon=":material/check:", color="orange")
-    st.badge("Een biljoen is gelijk aan duizend miljoen", icon=":material/check:", color="blue")
-    uitstaande_aandelen = st.number_input("Outstanding Shares (#)", step=1.0, key="uitstaande_aandelen")
+    uitstaande_aandelen = st.number_input("Outstanding Shares (in M)", step=0.01, key="uitstaande_aandelen")
+    st.caption(preview_aantal_M(uitstaande_aandelen))
     actuele_beurskoers = st.number_input("Current Stock Price (€)", step=0.01, key="actuele_beurskoers")
 
-with col4:    
+with col4:
     st.subheader("Ratio's")
-    st.badge("Verwachte winst in miljoenen", icon=":material/check:", color="orange")
-    st.badge("Een biljoen is gelijk aan duizend miljoen", icon=":material/check:", color="blue")
-    verwachte_winst = st.number_input("Verwachte winst (€)", step=1000.0, key="verwachte_winst")
+    verwachte_winst = st.number_input("Verwachte winst (in M €)", step=1.0, key="verwachte_winst")
+    st.caption(preview_geld_M(verwachte_winst))
 
 # Calculations
 st.subheader("Financial Ratios")
@@ -81,13 +94,24 @@ st.subheader("Financial Ratios")
 try:
     eigen_vermogen_waarde = eigen_vermogen(activa, passiva)
     solvabiliteit_waarde = solvabiliteit(eigen_vermogen_waarde, activa)
-    rentabiliteit_waarde = rentabiliteit(uitstaande_aandelen, activa)
+    # Alle balans- en winstvelden zijn in miljoenen, dus eenheden vallen weg
+    rentabiliteit_waarde = rentabiliteit(nettowinst, eigen_vermogen_waarde or 0)
+    # Boekwaarde per aandeel = eigen vermogen / aantal aandelen (M / M = € per aandeel)
+    if eigen_vermogen_waarde and uitstaande_aandelen > 0:
+        boekwaarde_per_aandeel = eigen_vermogen_waarde / uitstaande_aandelen
+    else:
+        boekwaarde_per_aandeel = 0
     wpa_waarde = wpa(nettowinst, uitstaande_aandelen)
     kw_waarde = kw(actuele_beurskoers, wpa_waarde)
-    peg_waarde = peg(kw_waarde, verwachte_winst)
+    # Bereken impliciete winstgroei (%) uit huidige nettowinst → verwachte winst
+    if nettowinst > 0 and verwachte_winst > 0:
+        verwachte_winstgroei = (verwachte_winst - nettowinst) / nettowinst * 100
+    else:
+        verwachte_winstgroei = 0
+    peg_waarde = peg(kw_waarde, verwachte_winstgroei)
     graham_waarde = graham_number(wpa_waarde, boekwaarde_per_aandeel)
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col4 = st.columns(3)
     col1.metric("Solvabiliteit", f"{solvabiliteit_waarde:.2f}%", "", border=True)
     col1.caption("Hoeverre een bedrijf in staat is om aan zijn financiële verplichtingen te voldoen, vooral op lange termijn.")
     # If 50 > solvabiliteit > 25
@@ -104,9 +128,27 @@ try:
         col2.markdown("<span style='color: red;'>Waarschuwing: Rentabiliteit onder staatsobligaties + 10%</span>", unsafe_allow_html=True)
     else:
         col2.markdown("<span style='color: green;'>Rentabiliteit boven staatsobligaties + 10%</span>", unsafe_allow_html=True)
-    col3.metric("Graham Number", f"{graham_waarde:.2f}", "", border=True)
-    # Show information about Graham Number
-    col3.caption("Maximale prijs wat je zou moeten neerleggen voor een aandeel")
+    # col3.metric("Boekwaarde / aandeel", f"€ {boekwaarde_per_aandeel:.2f}", "", border=True)
+    # col3.caption(f"Eigen vermogen ({eigen_vermogen_waarde or 0:.0f}M €) ÷ aandelen ({uitstaande_aandelen:.2f}M).")
+    graham_delta = graham_waarde - actuele_beurskoers if graham_waarde > 0 and actuele_beurskoers > 0 else None
+    col4.metric(
+        "Graham Number",
+        f"€ {graham_waarde:.2f}",
+        delta=f"{graham_delta:+.2f} € vs koers" if graham_delta is not None else None,
+        border=True,
+    )
+    col4.caption("Maximale prijs volgens Graham. Verschil met huidige koers staat boven.")
+    if graham_waarde > 0 and actuele_beurskoers > 0:
+        if graham_waarde > actuele_beurskoers:
+            col4.markdown(
+                f"<span style='color: green;'>Koers €{actuele_beurskoers:.2f} ligt €{graham_waarde - actuele_beurskoers:.2f} onder Graham → mogelijk ondergewaardeerd</span>",
+                unsafe_allow_html=True,
+            )
+        else:
+            col4.markdown(
+                f"<span style='color: red;'>Koers €{actuele_beurskoers:.2f} ligt €{actuele_beurskoers - graham_waarde:.2f} boven Graham → mogelijk overgewaardeerd</span>",
+                unsafe_allow_html=True,
+            )
     col1, col2, col3 = st.columns(3)
     col1.metric("Winst per Aandeel", f"{wpa_waarde:.2f} €", "", border=True)
     col1.caption("Hoeveel winst een bedrijf maakt per uitstaand aandeel.")
@@ -121,7 +163,7 @@ try:
         col2.markdown("<span style='color: orange;'>Koers-Winstverhouding tussen 10 en 20</span>", unsafe_allow_html=True)
 
     col3.metric("PEG Ratio", f"{peg_waarde:.2f}", "", border=True)
-    col3.caption("Koers-winstverhouding (P/E ratio) van een aandeel relateert aan de verwachte winstgroei van een onderneming. Het is een hulpmiddel om te beoordelen of een aandeel relatief duur of goedkoop is, rekening houdend met de groei van de winst.")
+    col3.caption(f"Berekend met impliciete winstgroei van {verwachte_winstgroei:.1f}% (van {nettowinst:.0f}M → {verwachte_winst:.0f}M). Onder 1 = mogelijk ondergewaardeerd.")
     # If PEG > 1, then it is a warning, under 1 is warning
     if peg_waarde > 1:
         col3.markdown("<span style='color: red;'>Waarschuwing: Aandeel overgewaardeerd</span>", unsafe_allow_html=True)
@@ -144,6 +186,7 @@ try:
             "uitstaande_aandelen": uitstaande_aandelen,
             "actuele_beurskoers": actuele_beurskoers,
             "verwachte_winst": verwachte_winst,
+            "verwachte_winstgroei": verwachte_winstgroei,
             "eigen_vermogen": eigen_vermogen_waarde,
             "solvabiliteit": solvabiliteit_waarde,
             "rentabiliteit": rentabiliteit_waarde,

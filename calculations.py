@@ -1,5 +1,83 @@
 import numpy as np
 
+
+def parse_degiro_number(text):
+    """
+    Parse a value copied from DeGiro into an exact float.
+
+    Handles suffix K (10^3), M (10^6), B/T (biljoen, 10^12).
+    Both '.' and ',' are accepted as decimal separator.
+    Returns 0.0 for empty input. Raises ValueError on unparseable input.
+    """
+    if text is None:
+        return 0.0
+    s = str(text).strip().upper().replace(" ", "").replace(" ", "").replace("€", "").replace("$", "")
+    if not s:
+        return 0.0
+
+    multiplier = 1.0
+    if s[-1] in ("B", "T"):
+        multiplier = 1_000_000_000_000
+        s = s[:-1]
+    elif s[-1] == "M":
+        multiplier = 1_000_000
+        s = s[:-1]
+    elif s[-1] == "K":
+        multiplier = 1_000
+        s = s[:-1]
+
+    s = s.replace(",", ".")
+    return float(s) * multiplier
+
+
+def _fmt_nl(value, decimals=0):
+    """Format number with Dutch separators: 1.234.567,89"""
+    s = f"{value:,.{decimals}f}"
+    return s.replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def preview_geld_M(value_in_miljoenen):
+    """Live preview onder een 'in M €'-veld. Toont het absolute bedrag + magnitude."""
+    if not value_in_miljoenen:
+        return ""
+    v = value_in_miljoenen * 1_000_000
+    if abs(v) >= 1_000_000_000_000:
+        return f"= € {_fmt_nl(v)} ({_fmt_nl(v/1e12, 2)} B / biljoen)"
+    if abs(v) >= 1_000_000_000:
+        return f"= € {_fmt_nl(v)} ({_fmt_nl(v/1e9, 2)} mrd)"
+    if abs(v) >= 1_000_000:
+        return f"= € {_fmt_nl(v)} ({_fmt_nl(v/1e6, 2)} mln)"
+    return f"= € {_fmt_nl(v)}"
+
+
+def preview_aantal_M(value_in_miljoenen):
+    """Live preview onder een 'in M aandelen'-veld."""
+    if not value_in_miljoenen:
+        return ""
+    v = value_in_miljoenen * 1_000_000
+    if abs(v) >= 1_000_000_000_000:
+        return f"= {_fmt_nl(v)} aandelen ({_fmt_nl(v/1e12, 2)} B / biljoen)"
+    if abs(v) >= 1_000_000_000:
+        return f"= {_fmt_nl(v)} aandelen ({_fmt_nl(v/1e9, 2)} mrd)"
+    if abs(v) >= 1_000_000:
+        return f"= {_fmt_nl(v)} aandelen ({_fmt_nl(v/1e6, 2)} mln)"
+    return f"= {_fmt_nl(v)} aandelen"
+
+
+def format_degiro_number(value):
+    """Short display form: 3.809B / 18.90M / 12,34 — uses Dutch decimal comma."""
+    if value is None:
+        return "0"
+    v = float(value)
+    if abs(v) >= 1e12:
+        return f"{v/1e12:.3f}B".replace(".", ",")
+    if abs(v) >= 1e6:
+        return f"{v/1e6:.2f}M".replace(".", ",")
+    if abs(v) >= 1e3:
+        return f"{v/1e3:.2f}K".replace(".", ",")
+    return f"{v:.2f}".replace(".", ",")
+
+
 def eigen_vermogen(activa, passiva):
     """
     Calculate eigen vermogen (equity) from assets and liabilities.
@@ -20,16 +98,16 @@ def solvabiliteit(eigen_vermogen, activa):
     else:
         return 0
 
-def rentabiliteit(uitstaande_aandelen, totaal_vermogen):
+def rentabiliteit(nettowinst, eigen_vermogen):
     """
     Calculate rentabiliteit (return on equity).
 
-    :param uitstaande_aandelen: Outstanding shares
-    :param totaal_vermogen: Total equity
-    :return: Rentabiliteit (return on equity)
+    :param nettowinst: Net profit (same unit as eigen_vermogen)
+    :param eigen_vermogen: Equity (same unit as nettowinst)
+    :return: Rentabiliteit (return on equity) in %
     """
-    if uitstaande_aandelen > 0 and totaal_vermogen > 0:
-        return uitstaande_aandelen / totaal_vermogen * 100
+    if nettowinst > 0 and eigen_vermogen > 0:
+        return nettowinst / eigen_vermogen * 100
     else:
         return 0
 
@@ -59,17 +137,16 @@ def kw(actuele_beurskoers, wpa):
     else:
         return 0
 
-def peg(kw, verwachte_winst):
+def peg(kw, verwachte_winstgroei):
     """
     Calculate PEG ratio (price/earnings to growth ratio).
 
-    :param actuele_beurskoers: Current stock price
-    :param wpa: Winst per aandeel (earnings per share)
-    :param verwachte_winstgroei: Expected earnings growth rate
+    :param kw: Koers-winstverhouding (P/E ratio)
+    :param verwachte_winstgroei: Expected earnings growth rate in % (e.g. 12 for 12%)
     :return: PEG ratio
     """
-    if verwachte_winst > 0:
-        return kw / verwachte_winst
+    if verwachte_winstgroei > 0:
+        return kw / verwachte_winstgroei
     else:
         return 0
 
