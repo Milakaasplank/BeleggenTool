@@ -52,54 +52,80 @@ def _extract_isin(text):
 
 def _extract_naam(text):
     patterns = [
-        r"Naam van het Product[:\s]+(.+?)(?=\(|\n|ISIN)",
-        r"Product Name[:\s]+(.+?)(?=\(|\n|ISIN)",
-        r"Name of the (?:UCITS|product)[:\s]+(.+?)(?=\(|\n|ISIN)",
+        # VanEck-stijl: expliciet label
+        r"Naam van het Product[:\s]+(.+?)(?=\(het|\n|ISIN)",
+        r"Naam van het beleggingsproduct[:\s]+(.+?)(?=\(het|\n|ISIN)",
+        r"Product Name[:\s]+(.+?)(?=\(the|\n|ISIN)",
+        r"Name of the (?:UCITS|product|fund)[:\s]+(.+?)(?=\(the|\n|ISIN)",
+        # iShares-stijl: naam vlak voor "(het 'Fonds')" of "(the 'Fund')"
+        r"^([^\n]+?)\s*\(het ['‘’]Fonds['‘’]\)",
+        r"^([^\n]+?)\s*\(the ['‘’]Fund['‘’]\)",
+        # Fallback: eerste regel met "UCITS ETF" in de naam
+        r"^([A-Z][\w\s&\.\-\d]{5,}UCITS\s+ETF[^\n]*?)(?=\s*\(|,|\n|$)",
     ]
     for p in patterns:
-        m = re.search(p, text, re.IGNORECASE | re.DOTALL)
+        m = re.search(p, text, re.IGNORECASE | re.DOTALL | re.MULTILINE)
         if m:
             naam = m.group(1).strip().replace("\n", " ")
             naam = re.sub(r"\s+", " ", naam)
-            if naam:
-                return naam
+            # Filter out zwakke matches
+            if naam.lower().startswith("product") and len(naam) < 15:
+                continue
+            if len(naam) < 6:
+                continue
+            return naam
     return None
 
 
 def _extract_domicilie(text, isin=None):
-    m = re.search(r"geregistreerd in (\w+)", text, re.IGNORECASE)
-    if m:
-        land = m.group(1).lower()
-        if "ierland" in land:
-            return "Ierland (IE)"
-        if "luxemburg" in land:
-            return "Luxemburg (LU)"
-        if "nederland" in land:
-            return "Nederland (NL)"
-        if "duitsland" in land:
-            return "Duitsland (DE)"
-    m = re.search(r"domicil(?:ed|e) in (\w+)", text, re.IGNORECASE)
-    if m:
-        land = m.group(1).lower()
-        if "ireland" in land:
-            return "Ierland (IE)"
-        if "luxembourg" in land:
-            return "Luxemburg (LU)"
-        if "netherlands" in land:
-            return "Nederland (NL)"
+    nl_patterns = [
+        r"geregistreerd in (\w+)",
+        r"goedgekeurd in (\w+)",
+        r"opgericht in (\w+)",
+        r"gevestigd in (\w+)",
+    ]
+    for p in nl_patterns:
+        m = re.search(p, text, re.IGNORECASE)
+        if m:
+            land = m.group(1).lower()
+            if "ierland" in land:
+                return "Ierland (IE)"
+            if "luxemburg" in land:
+                return "Luxemburg (LU)"
+            if "nederland" in land:
+                return "Nederland (NL)"
+            if "duitsland" in land:
+                return "Duitsland (DE)"
+    en_patterns = [
+        r"domicil(?:ed|e) in (\w+)",
+        r"registered in (\w+)",
+        r"incorporated in (\w+)",
+        r"approved in (\w+)",
+    ]
+    for p in en_patterns:
+        m = re.search(p, text, re.IGNORECASE)
+        if m:
+            land = m.group(1).lower()
+            if "ireland" in land:
+                return "Ierland (IE)"
+            if "luxembourg" in land:
+                return "Luxemburg (LU)"
+            if "netherlands" in land:
+                return "Nederland (NL)"
     if isin:
         return ISIN_DOMICILIE.get(isin[:2].upper(), "Anders")
     return None
 
 
 def _extract_uitkering(text):
-    patterns = [
+    # 1. Expliciet label
+    label_patterns = [
         r"Uitkeringsbeleid[:\s]+([^\n]+)",
         r"Distribution Policy[:\s]+([^\n]+)",
         r"Income Treatment[:\s]+([^\n]+)",
     ]
     val = ""
-    for p in patterns:
+    for p in label_patterns:
         m = re.search(p, text, re.IGNORECASE)
         if m:
             val = m.group(1).strip()
@@ -109,6 +135,25 @@ def _extract_uitkering(text):
         return "Accumulerend"
     if any(k in val_lower for k in ["uitgekeerd", "distribu", "uitkering"]):
         return "Distribuerend"
+
+    # 2. Suffix in productnaam: (Dist), (Distr), (Acc)
+    if re.search(r"\((?:Dist|Distr|Distributing|D)\)", text):
+        return "Distribuerend"
+    if re.search(r"\((?:Acc|Accumulating|A)\)", text):
+        return "Accumulerend"
+
+    # 3. Generieke tekstpatronen
+    text_lower = text.lower()
+    if any(k in text_lower for k in [
+        "dividendaandelen", "per kwartaal uitgekeerd", "per jaar uitgekeerd",
+        "income is paid", "dividends are distributed",
+    ]):
+        return "Distribuerend"
+    if any(k in text_lower for k in [
+        "opbrengsten herbelegd", "income reinvested", "income is reinvested",
+    ]):
+        return "Accumulerend"
+
     return None
 
 
@@ -122,25 +167,41 @@ def _extract_replicatie(text):
     ]):
         return "Fysiek sampling"
     if any(k in text_lower for k in [
+        # VanEck-stijl
         "direct in de onderliggende", "directly in the underlying",
         "fysieke replicatie", "physical replication", "full replication",
         "volledige replicatie",
+        # iShares-stijl
+        "in vergelijkbare verhoudingen aan te houden",
+        "fonds wil de index repliceren", "fund seeks to replicate",
+        "te beleggen in de effecten met een aandelenkarakter",
+        # Vanguard-stijl
+        "fund holds the securities", "fund invests in the securities",
+        "physically replicates",
     ]):
         return "Fysiek volledig"
     return None
 
 
 def _extract_ter(text):
+    # Volgorde: eerst totale kosten (PRIIP-verplicht label), daarna fallbacks
     patterns = [
-        r"Effect van de kosten per jaar[^\d]*([\d,\.]+)\s*%",
-        r"Lopende kosten[^\d]*([\d,\.]+)\s*%",
-        r"Total Expense Ratio[^\d]*([\d,\.]+)\s*%",
-        r"Ongoing charges?[^\d]*([\d,\.]+)\s*%",
-        r"Ongoing costs?[^\d]*([\d,\.]+)\s*%",
-        r"Beheerskoste?n[^\d]*([\d,\.]+)\s*%",
+        # Totale jaarlijkse kosten — meest accurate
+        r"Effect van de kosten per jaar[^\d%]*([\d,\.]+)\s*%",
+        r"Impact van de jaarlijkse kosten[^\d%]*([\d,\.]+)\s*%",
+        r"Impact of (?:the )?annual cost[^\d%]*([\d,\.]+)\s*%",
+        # Lopende kosten / TER
+        r"Lopende kosten[^\d%]*([\d,\.]+)\s*%",
+        r"Total Expense Ratio[^\d%]*([\d,\.]+)\s*%",
+        r"Ongoing charges?[^\d%]*([\d,\.]+)\s*%",
+        r"Ongoing costs?[^\d%]*([\d,\.]+)\s*%",
+        # Fallback: alleen beheerkosten (kan onderschatting zijn)
+        r"Beheerskoste?n(?:\s+en\s+andere)?[^\d%]*([\d,\.]+)\s*%",
+        r"Beheerkoste?n(?:\s+en\s+andere)?[^\d%]*([\d,\.]+)\s*%",
+        r"Management fee[^\d%]*([\d,\.]+)\s*%",
     ]
     for p in patterns:
-        m = re.search(p, text, re.IGNORECASE)
+        m = re.search(p, text, re.IGNORECASE | re.DOTALL)
         if m:
             v = m.group(1).replace(",", ".")
             try:
